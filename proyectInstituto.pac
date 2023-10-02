@@ -21,7 +21,8 @@ package globalAliases: (Set new
 	yourself).
 
 package setPrerequisites: #(
-	'..\..\Core\Object Arts\Dolphin\Base\Dolphin').
+	'..\..\Core\Object Arts\Dolphin\Base\Dolphin'
+	'..\..\Core\Object Arts\Dolphin\MVP\Presenters\Prompters\Dolphin Prompter').
 
 package!
 
@@ -33,7 +34,7 @@ Object subclass: #Alumno
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Object subclass: #Curso
-	instanceVariableNames: 'codigo nombre especialidad docente duracion cupo vancante'
+	instanceVariableNames: 'codigo nombre especialidad docente duracion cupo vacante'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -79,7 +80,10 @@ Alumno comment: ''!
 !Alumno categoriesForClass!Kernel-Objects! !
 !Alumno methodsFor!
 
-cargaDatos!
+cargaDatos
+nroInscripto."Realizar automatizacion"
+nombre:=(Prompter prompt: 'Ingrese el nombre: ')asString.
+dni:=(Prompter prompt: 'Ingrese el DNI: ')asNumber.!
 
 inscribirCurso! !
 !Alumno categoriesForMethods!
@@ -94,9 +98,21 @@ Curso comment: ''!
 
 actualizaVacante!
 
-cargaDatos! !
+asignacionDocente!
+
+cargaDatos
+codigo."Va a ser un codigo automatico, ver como se realizo en la clase de teoria"
+nombre:=(Prompter prompt: 'Ingrese el nombre del curso: ' ) asString.
+especialidad:=('Ingrese la especialdad del curso')asString.
+duracion:=(Prompter prompt: 'Ingrese la duracion en horas del curso: ')asNumber.
+docente:=self asignacionDocente."realizar una funcion aparte para la asignacion del docente, verificando su existecia"
+cupo:=(Prompter prompt: 'Ingrese el cupo de alumnos del curso:' )asNumber.
+vacante:= self actualizaVacante ."Ver como calcular los lugares diponibles que hay para elc curso"
+
+! !
 !Curso categoriesForMethods!
 actualizaVacante!public! !
+asignacionDocente!public! !
 cargaDatos!public! !
 !
 
@@ -105,7 +121,12 @@ Docente comment: ''!
 !Docente categoriesForClass!Kernel-Objects! !
 !Docente methodsFor!
 
-cargaDatos! !
+cargaDatos
+nombre:=(Prompter prompt: 'Ingrese el nommbre: ')asString.
+dni:=(Prompter prompt: 'Ingrese el DNI: ')asNumber.
+legajo."Podemos hacer lo mismo que con el codigo de los cursos, que sea automatico"
+titulo:=(Prompter prompt: 'Ingrese que titulo posee: ')asString.
+cargo:=(Prompter prompt: 'Ingrese que cargo posee: ')asString.! !
 !Docente categoriesForMethods!
 cargaDatos!public! !
 !
@@ -115,13 +136,33 @@ Instituto comment: ''!
 !Instituto categoriesForClass!Unclassified! !
 !Instituto methodsFor!
 
-cargaAlumno!
+cargaAlumno
+|alu|
+alu :=Alumno new.
+alu cargaDatos.
+alumnos add: alu.!
 
-cargaCurso!
+cargaCurso
+|curs|
+curs:= Curso new.
+curs cargaDatos.
+cursos add: curs.!
 
-cargaDocente!
+cargaDocente
+|docen|
+docen :=Docente new.
+docen cargaDatos.
+docentes add: docen.
+!
 
-inicializa!
+inicializa
+alumnos := Collection new.
+docentes := Collection new.
+cursos :=Collection new.
+CursoLargo.PrecioMensual :=(Prompter prompt: 'Ingrese el valro mesual de los cursos largos: ')asNumber asInteger.
+Alumno.UltimoNroIns:=0.
+
+!
 
 menu! !
 !Instituto categoriesForMethods!
@@ -137,7 +178,9 @@ CursoIntensivo comment: ''!
 !CursoIntensivo categoriesForClass!Kernel-Objects! !
 !CursoIntensivo methodsFor!
 
-cargaDatos! !
+cargaDatos
+precioxHora:=(Prompter prompt: 'Ingrese el precio por hora: ')asNumber asFloat.
+! !
 !CursoIntensivo categoriesForMethods!
 cargaDatos!public! !
 !
@@ -157,12 +200,10 @@ Seminario comment: ''!
 !Seminario categoriesForClass!Kernel-Objects! !
 !Seminario methodsFor!
 
-cargaDatos!
-
-cargaPrecio! !
+cargaDatos
+precio:=(Prompter prompt: 'Ingrese el precio del curso: ')asNumber asFloat.! !
 !Seminario categoriesForMethods!
 cargaDatos!public! !
-cargaPrecio!public! !
 !
 
 "Binary Globals"!
