@@ -22,6 +22,7 @@ package globalAliases: (Set new
 
 package setPrerequisites: #(
 	'..\..\Core\Object Arts\Dolphin\Base\Dolphin'
+	'..\..\Core\Object Arts\Dolphin\Base\Dolphin Message Box'
 	'..\..\Core\Object Arts\Dolphin\MVP\Presenters\Prompters\Dolphin Prompter').
 
 package!
@@ -164,7 +165,25 @@ Alumno.UltimoNroIns:=0.
 
 !
 
-menu! !
+menu
+|op|
+op:=8.
+[op=0] whileFalse: [
+	MessageBox notify: 'Menu:
+1-Registrar un curso.
+2-Registrar un allumno.
+3-Registrar a un docente.
+4-Inscribir un alumno a un curso.
+5-Listados.
+0-Salir.'.
+op:=(Prompter prompt: 'Seleccione una de las opciones: ')asNumber asInteger.
+[op>5 /op<0] whileTrue: [op:=(Prompter prompt: 'Opcion incorrecta, seleccione nuevamente: ')asNumber asInteger.].
+(op=1)ifTrue: [self cargaAlumno ] .
+(op=2)ifTrue: [self cargaAlumno ].
+(op=3)ifTrue: [self cargaDocente ].
+(op=4)ifTrue: ["inscripcion de un alumno a un curso"].
+(op=5)ifTrue: ["emision de listados"].
+]! !
 !Instituto categoriesForMethods!
 cargaAlumno!public! !
 cargaCurso!public! !
