@@ -31,7 +31,7 @@ package!
 
 Object subclass: #Alumno
 	instanceVariableNames: 'nroInscripto dni nombre cursosInscripto cursosRealizados'
-	classVariableNames: 'UltimoNroIns'
+	classVariableNames: 'NroInsGenerado'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Object subclass: #Curso
@@ -50,18 +50,18 @@ Object subclass: #Instituto
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Curso subclass: #CursoIntensivo
-	instanceVariableNames: 'cantidadHoras precioxHora'
-	classVariableNames: ''
+	instanceVariableNames: 'precioxHora'
+	classVariableNames: 'DuracionMax'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Curso subclass: #CursoLargo
 	instanceVariableNames: ''
-	classVariableNames: 'PrecioMensual'
+	classVariableNames: 'DuracionMax PrecioMensual'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Curso subclass: #Seminario
 	instanceVariableNames: 'precio'
-	classVariableNames: ''
+	classVariableNames: 'DuracionMax'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 
@@ -82,14 +82,31 @@ Alumno comment: ''!
 !Alumno methodsFor!
 
 cargaDatos
-nroInscripto."Realizar automatizacion"
 nombre:=(Prompter prompt: 'Ingrese el nombre: ')asString.
 dni:=(Prompter prompt: 'Ingrese el DNI: ')asNumber.!
 
-inscribirCurso! !
+inscribirCurso!
+
+setNroInscripto:unNro
+nroInscripto:=unNro.! !
 !Alumno categoriesForMethods!
 cargaDatos!public! !
 inscribirCurso!public! !
+setNroInscripto:!public! !
+!
+
+!Alumno class methodsFor!
+
+devNroInsGenerado
+^NroInsGenerado+1
+!
+
+setNroInsGenerado:unNro
+NroInsGenerado :=unNro.
+! !
+!Alumno class categoriesForMethods!
+devNroInsGenerado!public! !
+setNroInsGenerado:!public! !
 !
 
 Curso guid: (GUID fromString: '{ef26b142-c710-41e3-b2c5-f52b6b456c00}')!
@@ -101,20 +118,21 @@ actualizaVacante!
 
 asignacionDocente!
 
-cargaDatos
-codigo."Va a ser un codigo automatico, ver como se realizo en la clase de teoria"
+cargaDatos: dura
+codigo:=(Prompter prompt: 'Ingrese el codigo del curso' )asNumber asInteger.
 nombre:=(Prompter prompt: 'Ingrese el nombre del curso: ' ) asString.
-especialidad:=('Ingrese la especialdad del curso')asString.
-duracion:=(Prompter prompt: 'Ingrese la duracion en horas del curso: ')asNumber.
+especialidad:=(Prompter prompt: 'Ingrese la especialdad del curso')asString.
+duracion:=dura.
 docente:=self asignacionDocente."realizar una funcion aparte para la asignacion del docente, verificando su existecia"
-cupo:=(Prompter prompt: 'Ingrese el cupo de alumnos del curso:' )asNumber.
+cupo:=(Prompter prompt: 'Ingrese el cupo de alumnos del curso:' )asNumber asInteger.
 vacante:= self actualizaVacante ."Ver como calcular los lugares diponibles que hay para elc curso"
+
 
 ! !
 !Curso categoriesForMethods!
 actualizaVacante!public! !
 asignacionDocente!public! !
-cargaDatos!public! !
+cargaDatos:!public! !
 !
 
 Docente guid: (GUID fromString: '{d4bf1db2-6806-432b-b74a-2ca8f93f24d9}')!
@@ -141,13 +159,23 @@ cargaAlumno
 |alu|
 alu :=Alumno new.
 alu cargaDatos.
+alu setNroInscripto: Alumno devNroInsGenerado.
 alumnos add: alu.!
 
 cargaCurso
-|curs|
-curs:= Curso new.
-curs cargaDatos.
-cursos add: curs.!
+|c duracion|
+duracion:=(Prompter prompt: 'Ingrese la duracion del curso en horas: ' )asNumber asInteger.
+(duracion <= CursoIntensivo getDuracionMax ) ifTrue: [
+c:= CursoIntensivo new.
+c cargaDatos: duracion .
+].
+(duracion > CursoIntensivo getDuracionMax & duracion <= Seminario getDuracionMax ) ifTrue: [
+c:= Seminario new.
+c cargaDatos: duracion .].
+(duracion > Seminario getDuracionMax & duracion <= CursoLargo getDuracionMax )ifTrue: [
+c:=CursoLargo new.
+c cargaDatos: duracion .].
+cursos add: c.!
 
 cargaDocente
 |docen|
@@ -157,11 +185,15 @@ docentes add: docen.
 !
 
 inicializa
-alumnos := Collection new.
-docentes := Collection new.
-cursos :=Collection new.
+alumnos := OrderedCollection new.
+docentes := OrderedCollection new.
+cursos := OrderedCollection new.
 CursoLargo.PrecioMensual :=(Prompter prompt: 'Ingrese el valro mesual de los cursos largos: ')asNumber asInteger.
-Alumno.UltimoNroIns:=0.
+Alumno setNroInsGenerado:0.
+CursoIntensivo setDuracionMax: 15.
+Seminario setDuracionMax: 30.
+CursoLargo setDuracionMax: 50.
+CursoLargo setCargaPrecio: 20000.
 
 !
 
@@ -170,17 +202,17 @@ menu
 op:=8.
 [op=0] whileFalse: [
 	MessageBox notify: 'Menu:
-1-Registrar un curso.
+1-Registrar a un docente.
 2-Registrar un allumno.
-3-Registrar a un docente.
+3-Registrar un curso.
 4-Inscribir un alumno a un curso.
 5-Listados.
 0-Salir.'.
 op:=(Prompter prompt: 'Seleccione una de las opciones: ')asNumber asInteger.
 [op>5 /op<0] whileTrue: [op:=(Prompter prompt: 'Opcion incorrecta, seleccione nuevamente: ')asNumber asInteger.].
-(op=1)ifTrue: [self cargaAlumno ] .
+(op=1)ifTrue: [self cargaDocente ] .
 (op=2)ifTrue: [self cargaAlumno ].
-(op=3)ifTrue: [self cargaDocente ].
+(op=3)ifTrue: [self cargaCurso ].
 (op=4)ifTrue: ["inscripcion de un alumno a un curso"].
 (op=5)ifTrue: ["emision de listados"].
 ]! !
@@ -199,9 +231,28 @@ CursoIntensivo comment: ''!
 
 cargaDatos
 precioxHora:=(Prompter prompt: 'Ingrese el precio por hora: ')asNumber asFloat.
+!
+
+cargaDatos: dura
+precioxHora:=(Prompter prompt: 'Ingrese el precio por hora: ')asNumber asFloat.
+super cargaDatos: dura.
 ! !
 !CursoIntensivo categoriesForMethods!
 cargaDatos!public! !
+cargaDatos:!public! !
+!
+
+!CursoIntensivo class methodsFor!
+
+getDuracionMax
+^DuracionMax!
+
+setDuracionMax: durMax
+DuracionMax := durMax.
+! !
+!CursoIntensivo class categoriesForMethods!
+getDuracionMax!public! !
+setDuracionMax:!public! !
 !
 
 CursoLargo guid: (GUID fromString: '{35c79ae1-6fdc-4d74-b599-0a0109e07629}')!
@@ -209,9 +260,18 @@ CursoLargo comment: ''!
 !CursoLargo categoriesForClass!Kernel-Objects! !
 !CursoLargo class methodsFor!
 
-cargaPrecio! !
+getDuracionMax
+^DuracionMax!
+
+setCargaPrecio: pMensual
+PrecioMensual:=pMensual.!
+
+setDuracionMax: durMax
+DuracionMax:=durMax.! !
 !CursoLargo class categoriesForMethods!
-cargaPrecio!public! !
+getDuracionMax!public! !
+setCargaPrecio:!public! !
+setDuracionMax:!public! !
 !
 
 Seminario guid: (GUID fromString: '{72232497-77e3-4b99-afd7-e4938dbb37c4}')!
@@ -220,9 +280,27 @@ Seminario comment: ''!
 !Seminario methodsFor!
 
 cargaDatos
-precio:=(Prompter prompt: 'Ingrese el precio del curso: ')asNumber asFloat.! !
+precio:=(Prompter prompt: 'Ingrese el precio del curso: ')asNumber asFloat.!
+
+cargaDatos: dura
+precio:=(Prompter prompt: 'Ingrese el precio del curso: ')asNumber asFloat.
+super cargaDatos: dura.
+! !
 !Seminario categoriesForMethods!
 cargaDatos!public! !
+cargaDatos:!public! !
+!
+
+!Seminario class methodsFor!
+
+getDuracionMax
+^DuracionMax!
+
+setDuracionMax:durMax
+DuracionMax:=durMax.! !
+!Seminario class categoriesForMethods!
+getDuracionMax!public! !
+setDuracionMax:!public! !
 !
 
 "Binary Globals"!
