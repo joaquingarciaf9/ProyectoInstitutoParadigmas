@@ -21,9 +21,9 @@ package globalAliases: (Set new
 	yourself).
 
 package setPrerequisites: #(
-	'..\..\Core\Object Arts\Dolphin\Base\Dolphin'
-	'..\..\Core\Object Arts\Dolphin\Base\Dolphin Message Box'
-	'..\..\Core\Object Arts\Dolphin\MVP\Presenters\Prompters\Dolphin Prompter').
+	'C:\Users\IPP\Documents\Dolphin Smalltalk 7\Core\Object Arts\Dolphin\Base\Dolphin'
+	'C:\Users\IPP\Documents\Dolphin Smalltalk 7\Core\Object Arts\Dolphin\Base\Dolphin Message Box'
+	'C:\Users\IPP\Documents\Dolphin Smalltalk 7\Core\Object Arts\Dolphin\MVP\Presenters\Prompters\Dolphin Prompter').
 
 package!
 
@@ -41,7 +41,7 @@ Object subclass: #Curso
 	classInstanceVariableNames: ''!
 Object subclass: #Docente
 	instanceVariableNames: 'legajo dni titulo nombre cargo'
-	classVariableNames: ''
+	classVariableNames: 'LegGenerado'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Object subclass: #Instituto
@@ -85,13 +85,21 @@ cargaDatos
 nombre:=(Prompter prompt: 'Ingrese el nombre: ')asString.
 dni:=(Prompter prompt: 'Ingrese el DNI: ')asNumber.!
 
+cursosInscripto: anObject
+	cursosInscripto add: anObject.!
+
 inscribirCurso!
+
+nroInscripto
+	^nroInscripto!
 
 setNroInscripto:unNro
 nroInscripto:=unNro.! !
 !Alumno categoriesForMethods!
 cargaDatos!public! !
+cursosInscripto:!accessing!private! !
 inscribirCurso!public! !
+nroInscripto!accessing!private! !
 setNroInscripto:!public! !
 !
 
@@ -114,25 +122,32 @@ Curso comment: ''!
 !Curso categoriesForClass!Kernel-Objects! !
 !Curso methodsFor!
 
-actualizaVacante!
-
-asignacionDocente!
+actualizaVacante
+|vac|
+vac:= (Instituto devAlumnos) size.
+^cupo - vac!
 
 cargaDatos: dura
 codigo:=(Prompter prompt: 'Ingrese el codigo del curso' )asNumber asInteger.
 nombre:=(Prompter prompt: 'Ingrese el nombre del curso: ' ) asString.
 especialidad:=(Prompter prompt: 'Ingrese la especialdad del curso')asString.
 duracion:=dura.
-docente:=self asignacionDocente."realizar una funcion aparte para la asignacion del docente, verificando su existecia"
 cupo:=(Prompter prompt: 'Ingrese el cupo de alumnos del curso:' )asNumber asInteger.
-vacante:= self actualizaVacante ."Ver como calcular los lugares diponibles que hay para elc curso"
+vacante:= self actualizaVacante .
 
 
-! !
+!
+
+codigo
+	^codigo!
+
+docente: anObject
+	docente := anObject! !
 !Curso categoriesForMethods!
 actualizaVacante!public! !
-asignacionDocente!public! !
 cargaDatos:!public! !
+codigo!accessing!private! !
+docente:!accessing!private! !
 !
 
 Docente guid: (GUID fromString: '{d4bf1db2-6806-432b-b74a-2ca8f93f24d9}')!
@@ -141,19 +156,50 @@ Docente comment: ''!
 !Docente methodsFor!
 
 cargaDatos
-nombre:=(Prompter prompt: 'Ingrese el nommbre: ')asString.
-dni:=(Prompter prompt: 'Ingrese el DNI: ')asNumber.
-legajo."Podemos hacer lo mismo que con el codigo de los cursos, que sea automatico"
+nombre:=(Prompter prompt: 'Ingrese el nombre: ')asString.
+dni:=(Prompter prompt: 'Ingrese el DNI: ')asNumber asInteger.
+"El numero de legajo se autogenera en la coleccion docentes en la clase instituto."
 titulo:=(Prompter prompt: 'Ingrese que titulo posee: ')asString.
-cargo:=(Prompter prompt: 'Ingrese que cargo posee: ')asString.! !
+cargo:=(Prompter prompt: 'Ingrese que cargo posee: ')asString.!
+
+dni
+	^dni!
+
+setLeg: unLeg
+legajo := unLeg.! !
 !Docente categoriesForMethods!
 cargaDatos!public! !
+dni!accessing!private! !
+setLeg:!public! !
+!
+
+!Docente class methodsFor!
+
+devLegGenerado
+^LegGenerado+1!
+
+setLegGenerado: unLeg
+LegGenerado:=unLeg.! !
+!Docente class categoriesForMethods!
+devLegGenerado!public! !
+setLegGenerado:!public! !
 !
 
 Instituto guid: (GUID fromString: '{3b10b20d-c80e-439a-bb84-934c0dec5e58}')!
 Instituto comment: ''!
 !Instituto categoriesForClass!Unclassified! !
 !Instituto methodsFor!
+
+asignacionDocente
+|doc dni|
+dni :=(Prompter  prompt: 'Ingrese el DNI del docente que desea asignar: ' )asNumber asInteger.
+doc := [docentes detect: [:unDocente | unDocente dni = dni ] ] ifNone: [nil].
+[doc = nil]whileTrue: [
+dni :=(Prompter  prompt: 'El DNI ingresado no existe, vuelva a ingresarlo: ' )asNumber asInteger.
+doc := [docentes detect: [:unDocente | unDocente dni = dni ] ] ifNone: [nil].
+].
+^doc
+!
 
 cargaAlumno
 |alu|
@@ -175,12 +221,14 @@ c cargaDatos: duracion .].
 (duracion > Seminario getDuracionMax & duracion <= CursoLargo getDuracionMax )ifTrue: [
 c:=CursoLargo new.
 c cargaDatos: duracion .].
+c docente: self asignacionDocente.
 cursos add: c.!
 
 cargaDocente
 |docen|
 docen :=Docente new.
 docen cargaDatos.
+docen setLeg: Docente devLegGenerado.
 docentes add: docen.
 !
 
@@ -190,11 +238,29 @@ docentes := OrderedCollection new.
 cursos := OrderedCollection new.
 CursoLargo.PrecioMensual :=(Prompter prompt: 'Ingrese el valro mesual de los cursos largos: ')asNumber asInteger.
 Alumno setNroInsGenerado:0.
+Docente setLegGenerado: 1.
 CursoIntensivo setDuracionMax: 15.
 Seminario setDuracionMax: 30.
 CursoLargo setDuracionMax: 50.
 CursoLargo setCargaPrecio: 20000.
 
+!
+
+inscribirAlumno
+|cur cod alu nroI|
+nroI :=(Prompter  prompt: 'Ingrese el numero de inscripcion del alumno a asignar: ' )asNumber asInteger.
+alu := [alumnos detect: [:unAlumno | unAlumno nroInscripto = nroI ] ] ifNone: [nil].
+[alu = nil]whileTrue: [
+nroI :=(Prompter  prompt: 'El numero de inscripto no existe, vuelva a ingresar: ' )asNumber asInteger.
+alu := [alumnos detect: [:unAlumno | unAlumno nroInscripto = nroI ] ] ifNone: [nil].
+].
+cod :=(Prompter  prompt: 'Ingrese el codigo del curso al cual quiere inscribir al alumno: ' )asNumber asInteger.
+cur := [cursos detect: [:unCurso | unCurso codigo = cod ] ] ifNone: [nil].
+[cur = nil]whileTrue: [
+cod :=(Prompter  prompt: 'El codigo del curso no existe, vuelva a ingresarlo: ' )asNumber asInteger.
+cur := [cursos detect: [:unCurso | unCurso codigo = cod ] ] ifNone: [nil].
+].
+alu cursosInscripto: cur.
 !
 
 menu
@@ -203,7 +269,7 @@ op:=8.
 [op=0] whileFalse: [
 	MessageBox notify: 'Menu:
 1-Registrar a un docente.
-2-Registrar un allumno.
+2-Registrar un alumno.
 3-Registrar un curso.
 4-Inscribir un alumno a un curso.
 5-Listados.
@@ -213,14 +279,16 @@ op:=(Prompter prompt: 'Seleccione una de las opciones: ')asNumber asInteger.
 (op=1)ifTrue: [self cargaDocente ] .
 (op=2)ifTrue: [self cargaAlumno ].
 (op=3)ifTrue: [self cargaCurso ].
-(op=4)ifTrue: ["inscripcion de un alumno a un curso"].
+(op=4)ifTrue: [self inscribirAlumno].
 (op=5)ifTrue: ["emision de listados"].
 ]! !
 !Instituto categoriesForMethods!
+asignacionDocente!public! !
 cargaAlumno!public! !
 cargaCurso!public! !
 cargaDocente!public! !
 inicializa!public! !
+inscribirAlumno!public! !
 menu!public! !
 !
 
@@ -229,16 +297,11 @@ CursoIntensivo comment: ''!
 !CursoIntensivo categoriesForClass!Kernel-Objects! !
 !CursoIntensivo methodsFor!
 
-cargaDatos
-precioxHora:=(Prompter prompt: 'Ingrese el precio por hora: ')asNumber asFloat.
-!
-
 cargaDatos: dura
 precioxHora:=(Prompter prompt: 'Ingrese el precio por hora: ')asNumber asFloat.
 super cargaDatos: dura.
 ! !
 !CursoIntensivo categoriesForMethods!
-cargaDatos!public! !
 cargaDatos:!public! !
 !
 
@@ -279,15 +342,11 @@ Seminario comment: ''!
 !Seminario categoriesForClass!Kernel-Objects! !
 !Seminario methodsFor!
 
-cargaDatos
-precio:=(Prompter prompt: 'Ingrese el precio del curso: ')asNumber asFloat.!
-
 cargaDatos: dura
 precio:=(Prompter prompt: 'Ingrese el precio del curso: ')asNumber asFloat.
 super cargaDatos: dura.
 ! !
 !Seminario categoriesForMethods!
-cargaDatos!public! !
 cargaDatos:!public! !
 !
 
